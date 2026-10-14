@@ -1,4 +1,4 @@
-name: Daily Walk-in Interview Scraper
+name: Daily Job Scraper - Walk-ins + Regular Jobs
 
 on:
   schedule:
@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  scrape-and-notify:
+  scrape-jobs:
     runs-on: ubuntu-latest
     
     steps:
@@ -33,25 +33,35 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install requests beautifulsoup4 lxml
-          pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client
-          pip install python-telegram-bot
       
-      - name: Run scraper
+      - name: Run expanded job scraper
         env:
-          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          python walkin_scraper.py
+          python walkin_scraper_expanded.py
       
-      - name: Upload execution logs
+      - name: Upload job listings (artifacts)
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: scraper-logs
-          path: walkins.json
+          name: job-listings
+          path: |
+            walkins.csv
+            regular_jobs.csv
           retention-days: 7
+      
+      - name: Commit CSV files to repository
+        if: success()
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Add files
+          git add walkins.csv regular_jobs.csv || true
+          
+          # Commit if there are changes
+          git diff --quiet && git diff --staged --quiet || (git commit -m "📊 Update job listings - $(date +'%Y-%m-%d %H:%M:%S')" && git push)
       
       - name: Check execution status
         if: failure()
