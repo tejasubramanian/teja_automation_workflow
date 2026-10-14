@@ -39,7 +39,7 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          python walkin_scraper_expanded.py
+          python walkin_scraper_rss.py
       
       - name: Upload job listings (artifacts)
         if: always()
